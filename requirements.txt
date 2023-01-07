@@ -1,0 +1,5 @@
+elasticsearch==7.9.1
+wtforms
+googletrans==4.0.0rc1
+mtranslate
+sklearn

@@ -1,0 +1,189 @@
+<html>
+
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+  <style>
+    body {
+      background-color: rgb(173, 248, 99);
+
+    }
+
+    hr {
+      border-top: 5px solid #000000;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container" id="app">
+    <div class="row">
+      <div class="col-1"></div>
+      <div class="col-11" style="align-content: center;">
+        <h2>Sinhala Song’s Metaphor Searching - සිංහල ගීත රූපක සොයමු</h2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-4"></div>
+      <div class="col-8">
+        </br>
+        <form class="form-inline" action="http://localhost:5000/" method="post" lang="si">
+          <input class="form-control mr-sm-2" type="text" name="query" placeholder="Query" aria-label="Search">
+          <button class="btn btn-outline-success my-2 my-sm-0"
+            style="background-color: darkgreen; color: rgb(255, 255, 255);" type="submit" value="submit"
+            name="form_1">Search</button>
+        </form>
+      </div>
+    </div>
+    <hr>
+    <div>
+      <h5>Total Results : {{count}}</h5>
+    </div>
+    </br>
+    <div class="row">
+      <div class="col-8">
+        <div class="card" >
+          {% for each in songs %}
+          <div class="card border-dark mb-3" >
+            <div class="card-body">
+              <b><h6 style="font-weight: bold; ">&nbsp;&nbsp;&nbsp;&nbsp;Details</h6></b> 
+              {% for key, value in each.items() %}             
+              <ul class="list-group list-group-flush">
+                {% if key != "lyrics" %}
+
+                {% if key == "Metaphors" %}
+                <b>
+                  <li class="list-group-item">{{ key }}</li>
+                </b>
+                {% for i in value %}
+                <li class="list-group-item">{{ i }}</li>
+                {% endfor %}
+                {% else %}
+                <li class="list-group-item">{{ key }} : {{ value}}</li>
+                {% endif %}
+                {% else %}
+                <b>
+                  <li class="list-group-item">Lyrics</li>
+                </b>
+                <li class="list-group-item">{{ value | safe}}</li>
+                {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if artists != "" %}
+      <form action="http://localhost:5000/" method="post" style=>
+        <div class="col-4">
+          <div class="card border-dark mb-1" style="width: 20rem;">
+            <div class="card-body">
+              <h5 class="card-title">Artists</h5>
+              <div class="form-check">
+                {% for each in artists %}
+                <input class="form-check-input" type="checkbox" name="{{each.key}}">
+                <label class="form-check-label" for="gridCheck1">
+                  {{each.key}} {{each.doc_count}}
+                </label>
+                <br>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="card border-dark mb-1"  style="width: 20rem;">
+            <div class="card-body">
+              <h5 class="card-title">Genre</h5>
+              <div class="form-check">
+                {% for each in genres %}
+                <input class="form-check-input" type="checkbox" name="{{each.key}}">
+                <label class="form-check-label" for="gridCheck1">
+                  {{each.key}} {{each.doc_count}}
+                </label>
+                <br>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="card border-dark mb-1"  style="width: 20rem;">
+            <div class="card-body">
+              <h5 class="card-title">Music</h5>
+              <div class="form-check">
+                {% for each in music %}
+                <input class="form-check-input" type="checkbox" name="{{each.key}}">
+                <label class="form-check-label" for="gridCheck1">
+                  {{each.key}} {{each.doc_count}}
+                </label>
+                <br>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="card border-dark mb-1"  style="width: 20rem;">
+            <div class="card-body">
+              <h5 class="card-title">Lyricist</h5>
+              <div class="form-check">
+                {% for each in lyricist %}
+                <input class="form-check-input" type="checkbox" name="{{each.key}}">
+                <label class="form-check-label" for="gridCheck1">
+                  {{each.key}} {{each.doc_count}}
+                </label>
+                <br>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="card border-dark mb-1"  style="width: 20rem;">
+            <div class="card-body">
+              <h5 class="card-title">Target Domain</h5>
+              <div class="form-check">
+                {% for each in targetDomain %}
+                <input class="form-check-input" type="checkbox" name="{{each.key}}">
+                <label class="form-check-label" for="gridCheck1">
+                  {{each.key}} {{each.doc_count}}
+                </label>
+                <br>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <div class="card border-dark mb-1"  style="width: 20rem;">
+            <div class="card-body">
+              <h5 class="card-title">Source Domain</h5>
+              <div class="form-check">
+                {% for each in sourceDomain %}
+                <input class="form-check-input" type="checkbox" name="{{each.key}}">
+                <label class="form-check-label" for="gridCheck1">
+                  {{each.key}} {{each.doc_count}}
+                </label>
+                <br>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          <br>
+          <div class="row">
+            <div class="col-5"></div>
+            <div class="col-3">
+          <input class="btn btn-primary" type="submit"  style="align-items: center; background-color: darkgreen; color: rgb(255, 255, 255); width: 200px;" value="Filter" name="filter" />
+          </div></div>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+
+</body>
+
+
+</html>
