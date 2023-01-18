@@ -14,6 +14,7 @@ The important files and directories of the repository is shown below
         ├── indexing_settings.json :  Settings file to create index 
         ├── sinhala_song_lyrics.json : Final Sinhala translated songs data
         ├── search.py : Source code for searching process
+        ├── analyers : Including stemming and synonym rules
     ├── template :web application
         ├── index.html : web application HTML code
 
