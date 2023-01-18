@@ -8,11 +8,18 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 es = Elasticsearch([{'host': 'localhost', 'port':9200}])
 
+# used for the translating the words
 def translate_to_english(value):
 	translator = Translator()
 	english_term = translator.translate(value, dest='en')
 	return english_term.text
 
+def translate_to_sinhala(value):
+	translator = Translator()
+	sinhala_term = translator.translate(value, dest='si')
+	return sinhala_term.text
+
+# used for the post processing text
 def post_processing_text(results):
     list_songs = []
     for i in range(len(results['hits']['hits'])) :
@@ -40,12 +47,9 @@ def post_processing_text(results):
     lyricist = aggregations['lyricist']['buckets']
     targetDomain = aggregations['Metaphors']['TargetDomain']['buckets']
     sourceDomain = aggregations['Metaphors']['SourceDomain']['buckets']
-    print(targetDomain)
-    
-
     return list_songs, artists, genres, music, lyricist,targetDomain ,sourceDomain
 
-
+# used for the search text
 def search_text(search_term):
     results = es.search(index='sinhala-songs',body={
         "size" : 500,
@@ -59,7 +63,8 @@ def search_text(search_term):
                             "query": {
                                 "multi_match": {
                                     "query": search_term,
-                                    "fields": ["Metaphors.Metaphor","Metaphors.Meaning","Metaphors.SourceDomain","Metaphors.TargetDomain"]
+                                    "fields": ["Metaphors.Metaphor","Metaphors.Meaning","Metaphors.SourceDomain","Metaphors.TargetDomain"],
+                                    "fuzziness": "AUTO"
                                 }
                             }
                         } 
@@ -70,7 +75,8 @@ def search_text(search_term):
                 "type" : "best_fields",
                 "fields" : [
                     "title_singlish","title_sinhala", "artist_name","genre",  "lyrics",
-                    "lyricist", "music"]
+                    "lyricist", "music"],
+                    "fuzziness": "AUTO"
                     
             }
                     }
@@ -140,7 +146,8 @@ def search_filter_text(search_term, artist_filter, genre_filter, music_filter, l
                             "query": {
                                 "multi_match": {
                                     "query": search_term,
-                                    "fields": ["Metaphors.Metaphor","Metaphors.Meaning","Metaphors.SourceDomain","Metaphors.TargetDomain"]
+                                    "fields": ["Metaphors.Metaphor","Metaphors.Meaning","Metaphors.SourceDomain","Metaphors.TargetDomain"],
+                                    "fuzziness": "AUTO"
                                 }
                             }
                         } 
@@ -151,30 +158,25 @@ def search_filter_text(search_term, artist_filter, genre_filter, music_filter, l
                         "type" : "best_fields",
                         "fields" : [
                             "title_singlish","title_sinhala", "artist_name","genre",  "lyrics",
-                            "lyricist", "music"]                    
+                            "lyricist", "music"],
+                            "fuzziness": "AUTO"                
                     }
                     } 
         ]
 
     if len(artist_filter) != 0 :
-        print("M")
         for i in artist_filter :
-            print(i)
             must_list.append({"match" : {"artist_name" : {"query" : i }}})
     if len(genre_filter) != 0 :
-        print("c")
         for i in genre_filter :
             must_list.append({"match" : {"genre":  {"query" : i }}})
     if len(music_filter) != 0 :
-        print("g")
         for i in music_filter :
             must_list.append({"match" : {"music":  {"query" : i }}})
     if len(lyricist_filter) != 0 :
-        print("w")
         for i in lyricist_filter :
             must_list.append({"match" : {"lyricist":  {"query" : i }}})
     if len(targetDomain_filter) != 0 :
-        print("p")
         for i in targetDomain_filter :
             must_list.append({
                         "nested": {
@@ -187,7 +189,6 @@ def search_filter_text(search_term, artist_filter, genre_filter, music_filter, l
                         } 
                     })
     if len(sourceDomain_filter) != 0 :
-        print("z")
         for i in sourceDomain_filter :
             must_list.append({
                         "nested": {
@@ -260,7 +261,7 @@ def search_filter_text(search_term, artist_filter, genre_filter, music_filter, l
     return list_songs, artists, genres, music, lyricist,targetDomain ,sourceDomain
 
 
-
+# used for the ategorize user queries into different intent classes
 def intent_classifier(search_term):
 
     select_type = False
@@ -268,7 +269,8 @@ def intent_classifier(search_term):
 
     keyword_top = ["top", "best", "popular", "good", "great"]
     keyword_song = ["song", "sing", "sang", "songs", "sings"]
-    keyword_targetDomain = ["metaphors"]
+
+    keyword_targetDomain = ["metaphor"]
     search_term_list = search_term.split()
     for j in search_term_list : 
         documents = [j]
@@ -278,24 +280,27 @@ def intent_classifier(search_term):
         tfidf_vectorizer = TfidfVectorizer(analyzer="char", token_pattern=u'(?u)\\b\w+\\b')
         tfidf_matrix = tfidf_vectorizer.fit_transform(documents)
 
+        # cosine similarity - used to find semantic similarity 
         cs = cosine_similarity(tfidf_matrix[0:1],tfidf_matrix)
         similarity_list = cs[0][1:]
 
         for i in similarity_list :
             if i > 0.8 :
                 select_type  = True
+
+    # Clean the use- Normalization to Terms
     if select_type :
         querywords = search_term.split()
         querywords  = [word for word in querywords if word.lower() not in keyword_top]
         querywords  = [word for word in querywords if word.lower() not in keyword_song]
         querywords  = [word for word in querywords if word.lower() not in keyword_targetDomain]
         resultword = ' '.join(querywords)
-        print(resultword)
+        print("Resultword : ",resultword)
 
     
     return select_type,  resultword
 
-
+# used to find most top results
 def top_most_text(search_term):
 
     with open('sinhala_songs_corpus/songs_meta_all.json') as f:
@@ -317,15 +322,24 @@ def top_most_text(search_term):
     documents_lyricist.extend(lyricist_list)
     documents_targetDomain = [search_term]
     documents_targetDomain.extend(targetDomain_list)
+    documents_views=[search_term]
+    documents_views.extend(['views'])
+
     query = []
     select_type = False
 
-    size = 100
+    size = 125
+    views=0
     term_list = search_term.split()
     print(term_list)
+
+    # find the number of results from quey
     for i in term_list:
         if i.isnumeric():
-            size = int(i)
+            if(int(i)<125):
+                size = int(i)
+            else:
+                views=int(i)
 
     tfidf_vectorizer = TfidfVectorizer(analyzer="char", token_pattern=u'(?u)\\b\w+\\b')
     tfidf_matrix = tfidf_vectorizer.fit_transform(documents_artist)
@@ -339,7 +353,9 @@ def top_most_text(search_term):
     if max_val >  0.85 :
         loc = np.where(similarity_list==max_val)
         i = loc[0][0]
-        query.append({"match" : {"artist_name_en": artist_list[i]}})
+
+        # boosting the feilds
+        query.append({"match" :{ "artist_name_en": { "query": artist_list[i], "boost": 2 }}})
         select_type = True
         other_select = True
 
@@ -354,7 +370,8 @@ def top_most_text(search_term):
     if max_val >  0.85 :
         loc = np.where(similarity_list==max_val)
         i = loc[0][0]
-        query.append({"match" : {"genre_en": genre_list[i]}})
+        # boosting the feilds
+        query.append({"match" :{ "genre_en": { "query": genre_list[i], "boost": 2 }}})
         select_type = True
 
     tfidf_vectorizer = TfidfVectorizer(analyzer="char", token_pattern=u'(?u)\\b\w+\\b')
@@ -373,7 +390,7 @@ def top_most_text(search_term):
                             "path": "Metaphors",
                             "query": {
                                 "match": {                                    
-                                    "Metaphors.TargetDomain":  targetDomain_list[i] 
+                                    "Metaphors.TargetDomain": translate_to_sinhala(targetDomain_list[i])
                                 }
                             }
                         } 
@@ -390,7 +407,9 @@ def top_most_text(search_term):
     if max_val >  0.85 and other_select == False:
         loc = np.where(similarity_list==max_val)
         i = loc[0][0]
-        query.append({"match" : {"music_en": music_list[i]}})
+
+        # boosting the feilds
+        query.append({"match" :{ "music_en": { "query": music_list[i], "boost": 2 }}})
         select_type = True
         other_select = True
 
@@ -404,14 +423,28 @@ def top_most_text(search_term):
     if max_val >  0.85 and other_select == False:
         loc = np.where(similarity_list==max_val)
         i = loc[0][0]
-        query.append({"match" : {"lyricist_en": lyricist_list[i]}})
+       
+        # boosting the feilds
+        query.append({"match" :{ "lyricist_en": { "query": lyricist_list[i], "boost": 2 }}})
+
         select_type = True
         other_select = True
-    
-    if select_type != True :
-        query.append({"match_all" : {}})
 
-    print(query)
+    #range query for check number of views
+    tfidf_vectorizer = TfidfVectorizer(analyzer="char", token_pattern=u'(?u)\\b\w+\\b')
+    tfidf_matrix = tfidf_vectorizer.fit_transform(documents_views)
+
+    cs = cosine_similarity(tfidf_matrix[0:1],tfidf_matrix)
+    similarity_list = cs[0][1:]
+    max_val = max(similarity_list)
+    if max_val >  0.85 and other_select == False:
+        loc = np.where(similarity_list==max_val)
+        i = loc[0][0]
+        select_type = True
+        other_select = True
+    query.append({"range" :{ "views": { "gte": views }}})
+
+
     results = es.search(index='sinhala-songs',body={
         "size" : size,
         "query" :{
@@ -516,8 +549,7 @@ def top_most_filter_text(search_term, artist_filter, genre_filter, music_filter,
     if len(lyricist_filter) != 0 :
         for i in lyricist_filter :
             query.append({"match" : {"lyricist": i}})
-    if len(targetDomain_filter) != 0 :
-        print("p")
+    if len(targetDomain_filter) != 0 :     
         for i in targetDomain_filter :
             query.append({
                         "nested": {
@@ -529,8 +561,7 @@ def top_most_filter_text(search_term, artist_filter, genre_filter, music_filter,
                             }
                         } 
                     })
-    if len(sourceDomain_filter) != 0 :
-        print("z")
+    if len(sourceDomain_filter) != 0 :        
         for i in sourceDomain_filter :
             query.append({
                         "nested": {
@@ -590,7 +621,7 @@ def top_most_filter_text(search_term, artist_filter, genre_filter, music_filter,
                             "path": "Metaphors",
                             "query": {
                                 "match": {                                    
-                                    "Metaphors.TargetDomain":  targetDomain_list[i] 
+                                    "Metaphors.TargetDomain": translate_to_sinhala(targetDomain_list[i])
                                 }
                             }
                         } 

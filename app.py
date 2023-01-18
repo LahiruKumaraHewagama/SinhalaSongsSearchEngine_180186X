@@ -33,7 +33,7 @@ def index():
             if request.form['query']:
                 search = request.form['query']
                 global_search = search
-                print(global_search)
+                # print(global_search)
             else :
                 search = global_search
             list_songs, artists, genres, music, lyricist ,targetDomain ,sourceDomain= search_query(search)
@@ -67,12 +67,13 @@ def index():
                     sourceDomain_filter.append(i["key"])
 
             list_songs, artists, genres, music, lyricist ,targetDomain ,sourceDomain= search_query_filtered(search, artist_filter, genre_filter, music_filter, lyricist_filter,targetDomain_filter,sourceDomain_filter)
-            print(search)
-            print(artist_filter)
-            print(genre_filter)
-            print(music_filter)
-            print(targetDomain_filter)
-            print(sourceDomain_filter)
+            # print(search)
+            # print(artist_filter)
+            # print(genre_filter)
+            # print(music_filter)
+            # print(targetDomain_filter)
+            # print(sourceDomain_filter)       
+         
         return render_template('index.html',count=len(list_songs), songs = list_songs, artists = artists, genres = genres, music = music, lyricist = lyricist,targetDomain=targetDomain ,sourceDomain=sourceDomain)
     return render_template('index.html', count=0,songs = '', artists = '',  genres = '', music = '', lyricist = '',targetDomain='',sourceDomain='')
 

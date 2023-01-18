@@ -10,20 +10,20 @@
                "type": "custom",
                "tokenizer": "icu_tokenizer",
                "char_filter": ["punctuation_char_filter"],
-               "filter": ["stop_word_filter","ngram_filter"]      
+               "filter": ["stop_word_filter","ngram_filter","synonym_filter","stemming_filter"]      
            },
            "s_analyzer02": {
                "type": "custom",
                "tokenizer": "icu_tokenizer",
                "char_filter":["punctuation_char_filter"],
-               "filter": ["stop_word_filter"]  
+               "filter": ["stop_word_filter","synonym_filter","stemming_filter"]  
 
            },
            "e_analyzer": {
                "type": "custom",
                "tokenizer": "classic",
                "char_filter":["punctuation_char_filter"],
-               "filter": ["ngram_filter"]
+               "filter": ["ngram_filter","synonym_filter","stemming_filter"]
            },
            "s_search_analyzer" : {
                "type": "custom",
@@ -52,7 +52,15 @@
                "stop_word_filter": {
                     "type":"stop",
                     "stopwords":["සහ","හා", "වැනි", "සේ", "‌මෙන්", "සමග","ත්","ගීත","සින්දු","ගෙ","ගේ","ගී"]
-               }
+               },
+               "stemming_filter": {
+                "type":"stemmer_override",
+                "rules_path": "elastic_search_indexing/analyers/stemmer.txt"
+              },
+              "synonym_filter": {
+                "type":"synonym_",
+                "rules_path": "elastic_search_indexing/analyers/synonym.txt"
+           }
          }
        }
       }, 

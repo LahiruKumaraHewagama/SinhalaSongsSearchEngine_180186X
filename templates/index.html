@@ -69,7 +69,9 @@
                 <li class="list-group-item">{{ i }}</li>
                 {% endfor %}
                 {% else %}
+                {% if key not in ['title_singlish','artist_name_en','genre_en','lyricist_en','music_en'] %}
                 <li class="list-group-item">{{ key }} : {{ value}}</li>
+                {% endif %}
                 {% endif %}
                 {% else %}
                 <b>
