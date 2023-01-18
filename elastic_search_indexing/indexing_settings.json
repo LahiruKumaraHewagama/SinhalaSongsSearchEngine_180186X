@@ -58,8 +58,8 @@
                 "rules_path": "elastic_search_indexing/analyers/stemmer.txt"
               },
               "synonym_filter": {
-                "type":"synonym_",
-                "rules_path": "elastic_search_indexing/analyers/synonym.txt"
+                "type":"synonym",
+                "synonyms_path": "elastic_search_indexing/analyers/synonym.txt"
            }
          }
        }
